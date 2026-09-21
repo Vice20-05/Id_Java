@@ -1,0 +1,322 @@
+========================================
+ EXPLANATION OF THE ID PROJECT (Main.java)
+ Written in simple words for the exam.
+========================================
+
+------------------------------------------------
+1. THE BIG PICTURE
+------------------------------------------------
+The program does 3 things in order:
+
+  1. Asks the user what they want (read a file, or type by hand).
+  2. Reads the data (rows like:  name,age,id ).
+  3. Validates each row (checks age and ID).
+  4. Prints who is an adult and who is UNDERAGE.
+
+Every row has 3 pieces of information separated by commas:
+   Bob,40,85312341
+   ^    ^  ^
+ name  age  id number
+
+------------------------------------------------
+2. THE main METHOD - WHERE EVERYTHING STARTS
+------------------------------------------------
+   public static void main(String[] args) throws Exception {
+
+"public static void main" - Java always looks for this exact
+line to start a program. This is the entry point (like the
+front door of the building).
+
+   try (Scanner scanner = new Scanner(System.in)) {
+
+   Scanner  - a tool that reads what the user types.
+   scanner  - the name of our tool (a variable).
+   System.in  - means "from the keyboard".
+
+   try (...) - means "keep the keyboard tool alive while we use
+   it, and close it automatically at the end". This prevents
+   memory/input problems.
+
+   -------------------------------------------------
+   The menu (the part that prints options):
+   -------------------------------------------------
+   System.out.println("\nenter option:\t");
+   System.out.println("\n1. Read data from file");
+   System.out.println("\n2. Read data from console");
+
+   System.out.println(...) - prints text on the screen.
+   \n - means "go to a new line".
+   \t - means "tab" (a small indentation).
+
+   int choice = scanner.nextInt();
+   - "int choice"  : a variable that holds a whole number.
+   - nextInt()     : waits for the user to type a number.
+
+   scanner.nextLine();
+   - We call nextLine() right after nextInt() because nextInt()
+     reads the NUMBER but leaves the ENTER key ("\n") behind.
+   - If we don't eat that leftover enter, the next nextLine()
+     would read an empty line. This is a classic beginner trap.
+
+   -------------------------------------------------
+   The switch - deciding which thing to do:
+   -------------------------------------------------
+   switch (choice) {
+       case 1 -> readFile("people.txt");
+       case 2 -> readConsole(scanner);
+       default -> System.out.println(...);
+   }
+
+   switch - like several "if" statements in a row.
+   "case 1 ->" - if choice is 1, do the file option.
+   "->" - the arrow just says "then do this".
+   default - if the user typed anything else (like 5), print an error.
+
+------------------------------------------------
+3. READ DATA FROM FILE (readFile)
+------------------------------------------------
+   public static void readFile(String fileName) throws IOException {
+
+   fileName - the parameter (a variable that receives the name
+   of the file we want to open, here "people.txt").
+
+   throws IOException - "I may fail to read the file (for
+   example if it does not exist), and if that happens Java is
+   allowed to throw/crash an IOException". We allow it instead
+   of handling it ourselves, to keep the code simple.
+
+   Path file = findFile(fileName);
+
+   Path    - a type that represents a file location.
+   file    - a variable that will hold WHERE the file is.
+   findFile(fileName) - our own helper that LOOKS for the file.
+
+   if (file == null) { ... }
+   - If findFile did NOT find the file, it gave back null
+     ("nothing"). Then we print an error in red and stop.
+   - null means "this is empty / nothing here".
+
+   for (String line : Files.readAllLines(file)) {
+       processPerson(line);
+   }
+
+   Files.readAllLines(file) - reads the WHOLE file and gives us
+   the lines, one by one, like a list:
+       "Bob,40,85312341"
+       "Johnny,13,54321567"
+
+   for (String line : ...) - a "for-each" loop.
+   - It takes each element of the list and puts it into the
+     variable "line", one after another.
+   - So first line = "Bob,40,85312341", then next, etc.
+   - For every line we call processPerson(line), which checks it.
+
+   -------------------------------------------------
+   findFile - our helper that looks for the file:
+   -------------------------------------------------
+   public static Path findFile(String fileName) {
+
+       if (Files.exists(Path.of(fileName))) {
+           return Path.of(fileName);
+       }
+
+       Path parent = Path.of("..", fileName);
+       if (Files.exists(parent)) {
+           return parent;
+       }
+       return null;
+   }
+
+   Files.exists(file) - asks "does this file exist?" (true/false).
+   Path.of(fileName) - builds a file location from a text name.
+   ".." - means "the parent folder" (go one level up).
+
+   We check two places:
+     1) the current folder (where the program is started)
+     2) the parent folder (project root)
+   This makes the program work no matter if you run it from
+   "/src" or from the project folder.
+
+------------------------------------------------
+4. READ DATA FROM KEYBOARD (readConsole)
+------------------------------------------------
+   public static void readConsole(Scanner scanner) {
+
+   scanner - we pass the SAME scanner from main, so we keep
+   reusing the keyboard tool.
+
+   while (true) {
+       String line = scanner.nextLine();
+       if (line.equalsIgnoreCase("stop")) {
+           break;
+       }
+       processPerson(line);
+   }
+
+   while(true) - an infinite loop: keep reading lines forever.
+   String line = scanner.nextLine(); - read ONE line typed by user.
+   line.equalsIgnoreCase("stop") - compare the line with "stop",
+   ignoring uppercase/lowercase (so "STOP" also works).
+   break; - exits the loop (stops the program, user is done).
+   processPerson(line); - validate this line just like the file lines.
+
+   NOTE: both readFile and readConsole end with processPerson(line).
+   That is the point - both inputs (file and keyboard) produce
+   the same kind of data, so we validate them the same way.
+
+------------------------------------------------
+5. THE VALIDATION - processPerson
+------------------------------------------------
+   public static void processPerson(String line) {
+
+   line - one row of text, like "Bob,40,85312341".
+
+   String[] parts = line.split(",");
+
+   String[] parts - an ARRAY (a list) of small pieces of text.
+   line.split(",") - CUTS the line at every comma, like:
+       "Bob,40,85312341"
+       becomes:
+       parts[0] = "Bob"
+       parts[1] = "40"
+       parts[2] = "85312341"
+
+   [0] means "first element" (in programming we count from 0!).
+
+   if (parts.length != 3) { ... }
+   - length tells us how many pieces we got.
+   - If we do NOT have exactly 3 pieces, the row is wrong.
+
+   String name = parts[0].trim();
+   String id = parts[2].trim();
+
+   trim() - removes spaces at the BEGINNING and END of the text.
+   Example:  "  Bob  ".trim()  ->  "Bob"
+   Why? Because people might type " Bob , 40 , 85312341" with
+   extra spaces, and trim cleans the data before we use it.
+
+   -------------------------------------------------
+   Checking the AGE:
+   -------------------------------------------------
+   int age;
+   try {
+       age = Integer.parseInt(parts[1].trim());
+   } catch (NumberFormatException e) { ... }
+
+   int age; - a variable for the age (a whole number).
+   Integer.parseInt(text) - converts TEXT into a NUMBER:
+       "40" -> 40
+   BUT if the text is not a number, like "abc", it throws
+   NumberFormatException (an error meaning "that is not a number").
+
+   That's why we use try { } catch (NumberFormatException e) { }
+   - try - "try to do this, it might fail".
+   - catch - "if making a number fails, do this instead".
+   - e - the exception object (we do not need it, we just stop).
+
+   if (age < 0 || age > 120) { ... }
+   - || means "OR".
+   - "age is smaller than 0" OR "age bigger than 120"
+     -> impossible age -> error (in red) and stop with "return;".
+   - return; - stops the method right NOW, nothing else happens.
+
+   -------------------------------------------------
+   Checking the ID:
+   -------------------------------------------------
+   if (!id.matches("\\d{6,8}")) { ... }
+
+   id.matches("\\d{6,8}") - asks a question:
+     must be 6 to 8 digits long.
+   - "\\d" means "a digit (0-9)".
+   - "{6,8}" means "between 6 and 8 of them".
+   - ! at the front means "NOT". So the whole thing reads:
+     "if the id does NOT look like 6-8 digits -> error".
+
+------------------------------------------------
+6. CREATING AND USING THE Person OBJECT
+------------------------------------------------
+   Person person = new Person();
+
+   Person     - our own class (the blueprint / the form).
+   person     - a variable that will hold one Person.
+   new Person()- creates a REAL Person object in memory
+                (fills the form).
+   Person person = ... - the variable points to that object.
+
+   person.setName(name);
+   person.setAge(age);
+   person.setId(id);
+
+   - We STORE our validated values inside the object.
+   - These are the "setters" (they SET the values).
+
+   if (person.getAge() < 18) { ... } else { ... }
+
+   - person.getAge() - the "getter", it gives the age back.
+   - We READ the values with getters.
+   - If age < 18 -> print UNDERAGE, else -> print adult.
+
+------------------------------------------------
+7. person class - THE BLUEPRINT
+------------------------------------------------
+   public class Person {
+
+       private String name;
+       private int age;
+       private String id;
+
+   private - only this class can touch these variables directly.
+   Nobody outside can say  person.age = -5;   (safe! protected!)
+
+   private String name;  - a variable that holds a person's name.
+   private int age;      - a variable that holds the age (number).
+   private String id;    - a variable that holds the ID (text).
+
+   GETTERS (read the values):
+       public String getName() { return name; }
+         - returns the name to whoever asks.
+       public int getAge() { return age; }
+       public String getId() { return id; }
+
+   SETTERS (write the values):
+       public void setName(String name) { this.name = name; }
+         - "this.name" is the class variable,
+           "name" is the value being given.
+         - this. makes clear WHICH name we mean.
+         - void = this method gives nothing back, it just SETS.
+       public void setAge(int age) { this.age = age; }
+       public void setId(String id) { this.id = id; }
+
+   The idea: the data (name, age, id) is private, and the only
+   way in/out is through the getters and setters (the door).
+
+------------------------------------------------
+8. THE RED COLOR CODE
+------------------------------------------------
+   "\033[31m" - makes the text red (a special code the terminal
+                understands).
+   "\033[0m"  - RESETS the color back to normal.
+
+   So an error prints like:
+       "\033[31m" + error text + "\033[0m"
+   We always close with \033[0m so the next text is not red too.
+
+------------------------------------------------
+9. QUICK SUMMARY - THE MOST IMPORTANT IDEAS
+------------------------------------------------
+ - split(",")  -> cut one text line into pieces using the comma.
+ - trim()      -> remove useless spaces from the start/end.
+ - Integer.parseInt() -> turn text into a number ("40" -> 40).
+ - try/catch   -> catch errors that can happen (like non-numbers).
+ - matches("\\d{6,8}") -> check a text looks like 6-8 digits.
+ - files/Paths -> read ALL the lines of a file, loop through them.
+ - Person class -> store data with private variables + getters/setters.
+ - ! in Java -> means "NOT".
+
+EVERYTHING follows ONE simple pattern:
+   READ one line (file OR keyboard)
+      -> CUT it into 3 pieces with split(",")
+      -> CLEAN it with trim()
+      -> CHECK age and ID
+      -> BUILD a Person with setters
+      -> SHOW adult or UNDERAGE with getters.
