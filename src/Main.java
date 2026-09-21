@@ -17,14 +17,16 @@ public class Main {
             int choice = scanner.nextInt();
             scanner.nextLine();
 
+            //selecting in the menu
             switch (choice) {
-                case 1 -> readFile("people.txt");
+                case 1 -> readFile("peoples.txt");
                 case 2 -> readConsole(scanner);
                 default -> System.out.println("\033[31mInvalid choice\033[0m");
             }
         }
     }
 
+    //read file
     public static void readFile(String fileName) throws IOException {
         Path file = findFile(fileName);
         if (file == null) {
@@ -92,6 +94,7 @@ public class Main {
         }
          
           // build a Person object using setters
+          //it calls Person.java
         Person person = new Person();
         person.setName(name);
         person.setAge(age);
